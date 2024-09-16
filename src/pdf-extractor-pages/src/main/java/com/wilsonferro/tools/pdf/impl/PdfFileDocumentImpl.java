@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,35 +43,23 @@ public class PdfFileDocumentImpl implements PdfDocument {
         log.atDebug().log("Created from URL: {}", url);
     }
 
-    private void readAllPages(PDDocument doc) {
+    private void readAllPages(PDDocument doc) throws IOException {
         int totalPages = doc.getNumberOfPages();
         List<PdfPage> pages = new ArrayList<>(totalPages);
         int pageCount = 1;
         for (PDPage page : doc.getPages()) {
-            pages.add(toPdfPage(pageCount++, page.getMediaBox()));
+            try (PDDocument docPage = new PDDocument()) {
+                docPage.addPage(page);
+                File newPdfPage = File.createTempFile("extracted-pdf-page-".concat(String.valueOf(pageCount)).concat("-"), ".pdf");
+                docPage.save(newPdfPage);
+                log.atDebug().log("Extracted PDF page to temporary file: {}", newPdfPage);
+
+                pages.add(new PdfPageImpl(pageCount++, page, newPdfPage));
+            }
         }
 
         this.totalPages = totalPages;
         this.pages = pages;
-    }
-
-    private static PdfPage toPdfPage(int page, PDRectangle rec) {
-        return new PdfPage() {
-            @Override
-            public int number() {
-                return page;
-            }
-
-            @Override
-            public float width() {
-                return rec.getWidth();
-            }
-
-            @Override
-            public float height() {
-                return rec.getHeight();
-            }
-        };
     }
 
     @Override

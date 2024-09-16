@@ -3,6 +3,8 @@ package com.wilsonferro.tools.pdf.tests;
 import com.wilsonferro.tools.pdf.PdfDocument;
 import com.wilsonferro.tools.pdf.PdfPage;
 import com.wilsonferro.tools.pdf.impl.PdfFileDocumentImpl;
+import com.wilsonferro.tools.pdf.impl.PdfPageImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +16,9 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Slf4j
 public class LoadPdfFileTest {
 
     private static final String pdfLocalFile = "pdf-files/EIU_BestCities.pdf";
@@ -60,6 +64,17 @@ public class LoadPdfFileTest {
         assertEquals(4, pages.get(3).number());
         for (var i = 5; i <= 23; i++) {
             assertEquals(i, pages.get(i - 1).number());
+        }
+    }
+
+    @Test
+    public void must_extract_each_page_to_multiple_separate_pdf_file() {
+        List<PdfPage> pages = doc.pages();
+        for (PdfPage page : pages) {
+            PdfPageImpl pdi = (PdfPageImpl) page;
+            File tempFile = pdi.getTemporaryFile();
+            assertTrue(tempFile.exists());
+            log.atDebug().log("Page {} was extracted to the file: {}", page.number(), tempFile);
         }
     }
 
