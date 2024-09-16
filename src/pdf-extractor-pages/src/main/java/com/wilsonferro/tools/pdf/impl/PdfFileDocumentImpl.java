@@ -2,6 +2,7 @@ package com.wilsonferro.tools.pdf.impl;
 
 import com.wilsonferro.tools.pdf.PdfDocument;
 import com.wilsonferro.tools.pdf.PdfPage;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -11,25 +12,28 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class PdfFileDocumentImpl implements PdfDocument {
 
-    private String name;
+    private final String name;
     private Integer totalPages;
     private List<PdfPage> pages;
 
     public PdfFileDocumentImpl(File file) throws IOException {
+        log.atDebug().log("Creating from file: {}", file);
         try (PDDocument doc = Loader.loadPDF(file)) {
             this.readAllPages(doc);
         } finally {
             this.name = file.getName();
         }
+        log.atDebug().log("Created from file: {}", file);
     }
 
     public PdfFileDocumentImpl(URL url) throws IOException {
+        log.atDebug().log("Creating from URL: {}", url);
         try (InputStream input = url.openStream()) {
             try (PDDocument doc = Loader.loadPDF(input.readAllBytes())) {
                 this.readAllPages(doc);
@@ -37,6 +41,7 @@ public class PdfFileDocumentImpl implements PdfDocument {
                 this.name = url.getFile();
             }
         }
+        log.atDebug().log("Created from URL: {}", url);
     }
 
     private void readAllPages(PDDocument doc) {
